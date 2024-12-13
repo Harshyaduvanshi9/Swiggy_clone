@@ -1,4 +1,4 @@
-.header{
+/* .header{
     display: flex;
     justify-content: space-between;
     border: 1px solid black;
@@ -24,7 +24,7 @@
     width: 200px;
     /* height: 370px; */
     /* border: 2px solid black; */
-    padding: 10px;
+    /* padding: 10px;
     margin: 5px;
 }
 
@@ -105,7 +105,7 @@ button{
 
 input {
     border: 1px solid #ccc; 
-}
+} */ 
 
 
 

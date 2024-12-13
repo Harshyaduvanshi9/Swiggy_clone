@@ -1,52 +1,83 @@
-import { useEffect, useState } from "react";
-import Shimmer from "./Shimmer";
+import { useState } from "react";
+import { CDN_URL} from "../utils/constants";
+import { useParams } from "react-router-dom";
+import useRestaurantMenu from "../utils/useRestaurantMenu";
+import RestaurantCategory from "./RestaurantCategory";
+import ResMenuShimmer from "./ResMenuShimmer";
 
 const RestaurantMenu = () => {
-    const [resInfo, setResInfo] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { resId } = useParams();
+    const resInfo = useRestaurantMenu(resId);
+    const [showIndex, setShowIndex] = useState(null);
 
-    useEffect(() => {
-        fetchMenu();
-    }, []);
 
-    const fetchMenu = async () => {
-        try {
-            const response = await fetch("https://www.swiggy.com/dapi/restaurants/list/v5?lat=22.7195687&lng=75.8577258&is-seo-homepage-enabled=true&page_type=DESKTOP_WEB_LISTING");
-            const data = await response.json();
-            const restaurantInfo = data?.data?.cards?.[2]?.card?.card?.gridElements?.infoWithStyle?.restaurants?.[0]?.info;
-            console.log(restaurantInfo);
+    if (resInfo === null)
+      return (
+        <div className="body">
+          <ResMenuShimmer />
+        </div>
+      );
+      console.log("Mamta",resInfo?.data?.cards[5]?.groupedCard?.cardGroupMap?.REGULAR?.cards);
 
-            setResInfo(restaurantInfo);
-        } catch (error) {
-            console.error("Error fetching menu:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    if (loading) {
-        return <Shimmer />;
-    }
+    const {
+        name,
+        cuisines,
+        avgRating,
+        costForTwoMessage,
+        cloudinaryImageId,
+        veg,aggregatedDiscountInfo:{header}
+        
+      } = resInfo?.data?.cards[2]?.card?.card?.info;
+    
 
-    if (!resInfo) {
-        return <div>No restaurant information available.</div>;
-    }
-
-    const { name,cuisines,costForTwo } = resInfo;
+      const categories =
+    resInfo?.data?.cards[5]?.groupedCard?.cardGroupMap?.REGULAR?.cards?.filter(
+      (cat) =>
+        cat?.card?.card?.["@type"] ===
+        "type.googleapis.com/swiggy.presentation.food.v2.ItemCategory"
+    );
 
     return (
-        <div className="menu">
-            <h1>Name of Restaurant: {name}</h1>
-            <h1>{cuisines.join(", ")} - {costForTwo}</h1>
-            <h2>Menu</h2>
-            <ul>
-                {/* Replace the placeholders with actual menu items */}
-                <li>Menu Item 1</li>
-                <li>Menu Item 2</li>
-                <li>Menu Item 3</li>
-                <li>Menu Item 4</li>
-            </ul>
+        <div className="mx-5 min-h-[calc(100vh_-_152px)]">
+      <div className="h-36 flex justify-start mb-8 gap-8 sm:gap-14">
+        <img
+          src={CDN_URL + cloudinaryImageId}
+          className="rounded-md h-36 w-48 object-cover mb-2"
+          alt="FoodItem "
+        />
+
+        <div className="flex flex-col justify-between">
+          <div>
+            <p className="text-xl font-bold mb-3">{name}</p>
+            <p>{cuisines.join(", ")}</p>
+          </div>
+
+          <div className="w-60 flex justify-between">
+            <span
+              className={`px-2 py-0.5 rounded-md ${
+                avgRating >= 4 ? "bg-green-200" : "bg-yellow-100"
+              }`}
+            >
+              ⭐️ {avgRating}
+            </span>
+            <span>{veg ? "🟢" : "🔺"}</span>
+            <span>{costForTwoMessage}</span>
+            <span className="bg-yellow-100 mx-0.
+            5 py-0.9 rounded-md font-bold">{header}</span>
+          </div>
         </div>
+      </div>
+      {categories?.map((category, index) => (
+        <RestaurantCategory
+          key={category?.card?.card?.title}
+          data={category?.card?.card}
+          showItems={index === showIndex ? true : false}
+          setShowIndex={() => setShowIndex(index === showIndex ? null : index)}
+        />
+      ))}
+
+    </div>
     );
 };
 
